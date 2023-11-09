@@ -1,5 +1,6 @@
 - name: Expense MySQL Setup
   hosts: all
+  become: yes
   tasks:
 
     - name: Disabling MYSQL previous version

@@ -11,7 +11,7 @@
 
     - name: Installing the NodeJS
       ansible.builtin.dnf:
-        - name: nodejs
+          name: nodejs
           state: present
 
     - name: Copying the Backend Service

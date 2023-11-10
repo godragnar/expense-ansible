@@ -3,8 +3,8 @@
   become: yes
   tasks:
     - name: Disabling NodeJS Default Version
-      ansible.builtin.shell:
-        - name: dnf module disable mysql -y
+      ansible.builtin.shell: dnf module disable nodejs -y
+
 
     - name: Enabling the Required NodeJS Version
       ansible.builtin.shell: dnf module enable nodejs:18 -y

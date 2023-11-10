@@ -11,7 +11,7 @@
 - name: Import Common Role-App Preq
   ansible.builtin.import_role:
     name: common
-    tasks_from: app_preq
+    tasks_from: app-preq
   vars:
     app_dir: /usr/share/nginx/html
     component: frontend

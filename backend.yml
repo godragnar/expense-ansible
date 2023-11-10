@@ -1,0 +1,61 @@
+- name: Expense Backend Setup
+  hosts: all
+  tasks:
+    - name: Disabling NodeJS Default Version
+      ansible.builtin.shell:
+        - name: dnf module disable mysql -y
+
+    - name: Enabling the Required NodeJS Version
+      ansible.builtin.shell: dnf module enable nodejs:18 -y
+
+    - name: Installing the NodeJS
+      ansible.builtin.dnf:
+        - name: nodejs
+          state: present
+
+    - name: Copying the Backend Service
+      ansible.builtin.copy:
+        src: backend.service
+        dest: /etc/systemd/system/backend.service
+
+    - name: Adding Application user
+      ansible.builtin.user:
+        name: expense
+
+    - name: Deleting the old Content
+      ansible.builtin.file:
+        path: /app
+        state: absent
+
+    - name: Creating Application Directory
+      ansible.builtin.file:
+        path: /app
+        state: directory
+
+    -  name: Downloading and Extracting the Content
+       ansible.builtin.unarchive:
+         src: https://expense-artifacts.s3.amazonaws.com/backend.zip
+         dest: /app
+         remote_src: yes
+
+    - name: Downloading the NodeJS Dependencies
+      ansible.builtin.shell: npm install
+      args :
+        chdir: /app #chdir is used  to extract the download content to specific Directory
+
+    - name: Install MysSQL Client
+      ansible.builtin.dnf:
+        name: mysql
+        state: present
+
+    - name:  To Load the Schema
+      ansible.builtin.shell: mysql -h mysql-dev.kgsdevops.online -uroot -p{{MYSQL_ROOT_PASSWORD}} < /app/schema/backend.sql
+
+    - name:  Starting Backend Service
+      ansible.builtin.systemd:
+        - name: backend
+          state: restarted
+          enabled: yes
+          daemon-reloaded: yes
+
+

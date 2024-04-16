@@ -1,0 +1,50 @@
+- name: Disabling NodeJS Module
+  ansible.builtin.shell: dnf module disable nodejs -y
+
+- name: Enbaling NodeJS 18 Module
+  ansible.builtin.shell:  dnf module enable nodejs:18 -y
+
+- name: Install NodeJS
+  ansible.builtin.dnf:
+    name: nodejs
+    state: present
+
+- name: Copying backend service file
+  ansible.builtin.template:
+    src: backend.service
+    dest: /etc/systemd/system/backend.service
+
+- name: Adding Application user
+  ansible.builtin.user:
+    name: expense
+
+- name: Import Common Role- App-prerequisites
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: app-prereq
+  vars:
+    app_dir: /app
+    component: backend
+
+
+- name: Install Nodejs Dependencies
+  ansible.builtin.shell: npm install
+  args:
+    chdir: /app
+
+- name: Installing MySQL client
+  ansible.builtin.dnf:
+    name: mysql
+    state: present
+
+- name: To Load Schema
+  ansible.builtin.shell: mysql -h"{{ lookup('amazon.aws.aws_ssm','backend.{{env}}.DB_HOST',region='us-east-1' ) }}"
+    -u"{{ lookup('amazon.aws.aws_ssm','backend.{{env}}.DB_USER',region='us-east-1' ) }}"
+    -p"{{ lookup('amazon.aws.aws_ssm','backend.{{env}}.DB_PASS',region='us-east-1' ) }}" < /app/schema/backend.sql
+
+- name: To Start Backend Services
+  ansible.builtin.systemd:
+    name: backend
+    state: restarted
+    enabled: yes
+    daemon-reload: yes
